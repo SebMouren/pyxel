@@ -299,14 +299,12 @@ def play_pyxel_app(pyxel_app_file):
     pyxel_app_file = _complete_extension(
         pyxel_app_file, "play", pyxel.APP_FILE_EXTENSION
     )
-    _check_file_exists(pyxel_app_file)
 
     print_pyxel_app_metadata(pyxel_app_file)
     startup_script_file = _extract_pyxel_app(pyxel_app_file)
 
     if startup_script_file:
-        sys.path.append(os.path.dirname(startup_script_file))
-        runpy.run_path(startup_script_file, run_name="__main__")
+        run_python_script(startup_script_file)
         return
 
     print(f"file not found: '{pyxel.APP_STARTUP_SCRIPT_FILE}'")
