@@ -129,15 +129,8 @@ def _check_file_under_dir(filename, dirname):
 
 
 def _create_app_dir():
-    play_dir = os.path.join(tempfile.gettempdir(), pyxel.BASE_DIR, "play")
-    pathlib.Path(play_dir).mkdir(parents=True, exist_ok=True)
-
-    for path in glob.glob(os.path.join(play_dir, "*")):
-        pid = int(os.path.basename(path))
-        if not pyxel.process_exists(pid):
-            shutil.rmtree(path)
-
-    app_dir = os.path.join(play_dir, str(os.getpid()))
+    temp_path =_cleanup_temp_dir("play")
+    app_dir = os.path.join(temp_path, str(os.getpid()))
     if os.path.exists(app_dir):
         shutil.rmtree(app_dir)
     os.mkdir(app_dir)
@@ -145,15 +138,8 @@ def _create_app_dir():
 
 
 def _create_watch_info_file():
-    watch_dir = os.path.join(tempfile.gettempdir(), pyxel.BASE_DIR, "watch")
-    pathlib.Path(watch_dir).mkdir(parents=True, exist_ok=True)
-
-    for path in glob.glob(os.path.join(watch_dir, "*")):
-        pid = int(os.path.basename(path))
-        if not pyxel.process_exists(pid):
-            os.remove(path)
-
-    watch_info_file = os.path.join(watch_dir, str(os.getpid()))
+    temp_path =_cleanup_temp_dir("play")
+    watch_info_file = os.path.join(temp_path, str(os.getpid()))
     with open(watch_info_file, "w") as f:
         f.write("")
     return watch_info_file
@@ -434,3 +420,20 @@ def copy_pyxel_examples():
         os.makedirs(os.path.dirname(dst_file), exist_ok=True)
         shutil.copyfile(src_file, dst_file)
         print(f"copied '{dst_file}'")
+
+def _cleanup_temp_dir(action_name :str) ->str:
+    dir_path = os.path.join(tempfile.gettempdir(), pyxel.BASE_DIR, action_name)
+    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+
+    for path in glob.glob(os.path.join(dir_path, "*")):
+        pid = int(os.path.basename(path))
+        if not pyxel.process_exists(pid):
+            if os.path.isfile(path):
+                os.remove(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                print("There's a problem with temporary path creation. Check your system.")
+                sys.exit(1)
+    return dir_path
+
